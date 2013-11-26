@@ -161,7 +161,7 @@ func (packet *SnmpPacket) marshalPDU(oids []string, requestid uint32) ([]byte, e
 
 	// build up resulting pdu - GetRequest, length, then the tail (buf)
 	pdu := new(bytes.Buffer)
-	pdu.WriteByte(byte(GetRequest))
+	pdu.WriteByte(byte(packet.RequestType))
 
 	buf_length_bytes, err2 := marshalLength(buf.Len())
 	if err2 != nil {
