@@ -555,3 +555,13 @@ func (s SnmpVersion) String() string {
 	}
 	return "2c"
 }
+
+// Simple function help identify whether or not a given string is the subtree of another
+func subtree_of(parent, child string) bool {
+	if len(parent) > len(child) {
+		return false
+	} else {
+                return child[0:len(parent)] == parent
+	}
+	return true
+}

@@ -68,8 +68,53 @@ func (x *GoSNMP) Connect() error {
 	return nil
 }
 
-// Send an SNMP GET request
+// Send an SNMP Get Next request
+func (x *GoSNMP) GetNext(oids []string) (result *SnmpPacket, err error) {
+	res, err := x.getSpecific(GetNextRequest, oids)
+	return res, err
+}
+
+func (x *GoSNMP) Walk(oids []string) <-chan *SnmpPacket {
+	ch := make(chan *SnmpPacket)
+	go func() {
+		start_oid := oids[0]
+		last_oid := oids[0]
+		for {
+			result, err2 := x.GetNext(oids)
+			if err2 != nil {
+                                fmt.Printf("%s", err2.Error())
+				break
+			}
+			stop_oid := result.Variables[0].Name
+			if stop_oid <= last_oid {
+                                fmt.Printf("stop_oid <= last_oid")
+				break
+				// OIDs are not increasing
+			}
+			if ! subtree_of(start_oid, stop_oid) {
+				break
+			}
+			/* build list of OIDs for next iteration */
+			oids = []string{}
+			for _, v := range result.Variables {
+				oids = append(oids, v.Name)
+			}
+			ch <- result
+			// log.Printf("%+v", result)
+			// log.Printf("Next OIDS: %+v\n", oids)
+		}
+		close(ch)
+	}()
+	return ch
+}
+
+// Send an SNMP Get request
 func (x *GoSNMP) Get(oids []string) (result *SnmpPacket, err error) {
+	res, err := x.getSpecific(GetRequest, oids)
+	return res, err
+}
+
+func (x *GoSNMP) getSpecific(requestType MessageType, oids []string) (result *SnmpPacket, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = fmt.Errorf("recover: %v", e)
@@ -97,7 +142,7 @@ func (x *GoSNMP) Get(oids []string) (result *SnmpPacket, err error) {
 		Community:   x.Community,
 		Error:       0,
 		ErrorIndex:  0,
-		RequestType: GetRequest,
+		RequestType: requestType,
 		Version:     x.Version,
 	}
 	// RequestID is only used during tests, therefore use an arbitrary uint32 ie 1
