@@ -151,6 +151,7 @@ func TestEnmarshalPDU(t *testing.T) {
 			Community: test.community,
 			Version:   test.version,
 			RequestID: test.requestid,
+                        RequestType: GetRequest,
 		}
 		oids := vb_pos_oids(test)
 
@@ -169,6 +170,7 @@ func TestEnmarshalMsg(t *testing.T) {
 			Community: test.community,
 			Version:   test.version,
 			RequestID: test.requestid,
+                        RequestType: GetRequest,
 		}
 		oids := vb_pos_oids(test)
 
